@@ -2,7 +2,19 @@
 
 A phone-only QR menu web app: welcome screen → menu browsing (search, sticky categories, specials feature) → dish details → personal selection list. No build step, no framework; plain HTML, CSS and JavaScript.
 
-## Run it
+## Live site
+
+- Public URL (for the QR code): **https://dhabalogy-menu.vercel.app/**
+- Hosting: Vercel project `dhabalogy-menu`, deployed from the GitHub repository `milindbedwa/dhabalogy-menu` (branch `main`). Every push to `main` redeploys automatically.
+- Print-ready QR code: `qr/dhabalogy-menu-qr.png` (teal on ivory, error-correction level Q so it survives a logo overlay or light wear).
+
+To publish a menu change: edit `js/menu-data.js`, then
+
+```bash
+git add -A && git commit -m "Update menu" && git push
+```
+
+## Run it locally
 
 Serve the folder with any static server and open it on a phone, e.g.
 
