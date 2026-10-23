@@ -43,6 +43,22 @@
   (DATA.seasonal || []).filter((s) => s.visible).forEach((s) => addSection(s, "seasonal"));
   (DATA.categories || []).forEach((s) => addSection(s, "regular"));
 
+  /* Artwork, tones and notes from js/menu-stories.js */
+  const STORIES = window.DHABALOGY_STORIES || { sections: {}, dishes: {} };
+  sections.forEach((sec) => {
+    const st = STORIES.sections[sec.id] || {};
+    sec.art = st.art || "";
+    sec.tone = st.tone || "sky";
+    sec.story = st.story || null;
+    let i = 0;
+    sec.groups.forEach((g) => g.items.forEach((d) => {
+      d.about = d.about || STORIES.dishes[d.id] || "";
+      d.pos = d.image ? 0 : (i % 6);
+      i++;
+    }));
+  });
+  const artFor = (d) => d.image || d.section.art || "";
+
   /* ---------------- Selection state (persisted) ---------------- */
   let selection = loadSelection();
 
@@ -125,45 +141,31 @@
     const tag = d.tag ? `<span class="tag">${esc(d.tag)}</span>` : "";
     const note = noteLine(d);
     const priceCls = typeof d.price === "number" ? "" : " is-mrp";
-    if (d.image) {
-      return `<article class="dish dish--featured${q ? " is-selected" : ""}" data-dish="${esc(d.id)}">
-        <button class="dish-main dish-main--img" type="button" aria-label="${esc(d.name)}, ${esc(priceText(d))}. View details">
-          <img class="dish-img" src="${esc(d.image)}" alt="" loading="lazy" decoding="async" width="800" height="500">
-        </button>
-        <div class="dish-row">
-          <button class="dish-main" type="button" aria-label="${esc(d.name)}, ${esc(priceText(d))}. View details">
-            <div class="dish-text">
-              <h3 class="dish-name">${esc(d.name)}${tag}</h3>
-              ${note ? `<p class="dish-note">${esc(note)}</p>` : ""}
-              <p class="dish-price${priceCls}">${esc(priceText(d))}</p>
-            </div>
-          </button>
-          ${controlHTML(d)}
-        </div>
-      </article>`;
-    }
-    return `<article class="dish${q ? " is-selected" : ""}" data-dish="${esc(d.id)}">
-      <button class="dish-main" type="button" aria-label="${esc(d.name)}, ${esc(priceText(d))}. View details">
-        <div class="dish-text">
-          <h3 class="dish-name">${esc(d.name)}${tag}</h3>
-          ${note ? `<p class="dish-note">${esc(note)}</p>` : ""}
-          <p class="dish-price${priceCls}">${esc(priceText(d))}</p>
-        </div>
+    const wide = !!d.image;
+    const art = artFor(d);
+    return `<article class="card tone-${esc(d.section.tone)} pos-${d.pos}${wide ? " card--wide" : ""}${q ? " is-selected" : ""}" data-dish="${esc(d.id)}">
+      <button class="card-main" type="button" aria-label="${esc(d.name)}, ${esc(priceText(d))}. View details">
+        <span class="card-art">${art ? `<img src="${esc(art)}" alt="" loading="lazy" decoding="async" width="640" height="640">` : ""}</span>
+        <span class="card-text">
+          <span class="card-name">${esc(d.name)}${tag}</span>
+          ${note ? `<span class="card-note">${esc(note)}</span>` : ""}
+          <span class="card-price${priceCls}">${esc(priceText(d))}</span>
+        </span>
       </button>
       ${controlHTML(d)}
     </article>`;
   }
   function sectionHTML(sec) {
     const seasonal = sec.kind === "seasonal";
-    const head = seasonal
-      ? `<header class="sec-head">
-           <div><span class="sec-tag">Seasonal</span><h2 class="display sec-title">${esc(sec.name)}</h2>${sec.subtitle ? `<p class="sec-sub">${esc(sec.subtitle)}</p>` : ""}</div>
-           <svg class="lotus" aria-hidden="true"><use href="#i-lotus"/></svg>
-         </header>`
-      : `<header class="sec-head"><h2 class="display sec-title">${esc(sec.name)}</h2>${sec.subtitle ? `<p class="sec-sub">${esc(sec.subtitle)}</p>` : ""}</header>`;
+    const story = sec.story ? `<p class="sec-story"><strong>${esc(sec.story.title)}.</strong> ${esc(sec.story.text)}</p>` : "";
+    const head = `<header class="sec-head tone-${esc(sec.tone)}">
+        <div class="sec-head-text">${seasonal ? '<span class="sec-tag">Seasonal</span>' : ""}<h2 class="display sec-title" id="sec-title-${esc(sec.id)}">${esc(sec.name)}</h2>${sec.subtitle ? `<p class="sec-sub">${esc(sec.subtitle)}</p>` : ""}</div>
+        ${sec.art ? `<img class="sec-art" src="${esc(sec.art)}" alt="" loading="lazy" decoding="async" width="640" height="640">` : ""}
+        ${story}
+      </header>`;
     const note = sec.note ? `<p class="sec-note">${esc(sec.note)}</p>` : "";
     const body = sec.groups.map((g) => `${g.name ? `<h3 class="grp-title">${esc(g.name)}</h3>` : ""}${g.items.map(dishRowHTML).join("")}`).join("");
-    return `<section class="sec sec--${sec.kind}" id="sec-${esc(sec.id)}" aria-labelledby="sec-title-${esc(sec.id)}">${head.replace('class="display sec-title"', `class="display sec-title" id="sec-title-${esc(sec.id)}"`)}${note}${body}</section>`;
+    return `<section class="sec sec--${sec.kind}" id="sec-${esc(sec.id)}" aria-labelledby="sec-title-${esc(sec.id)}">${head}${note}<div class="grid">${body}</div></section>`;
   }
   function featureHTML() {
     const f = DATA.featureBanner;
@@ -201,7 +203,7 @@
       $(".stepper", ctl).hidden = q === 0;
       $(".qty", ctl).textContent = q;
     });
-    $$(`.dish[data-dish="${CSS.escape(id)}"]`).forEach((row) => row.classList.toggle("is-selected", q > 0));
+    $$(`.card[data-dish="${CSS.escape(id)}"]`).forEach((row) => row.classList.toggle("is-selected", q > 0));
   }
   function refreshSelectionBar() {
     const t = totals();
@@ -239,13 +241,17 @@
     }
     let html = `<p class="results-head">${matches.length} ${matches.length === 1 ? "dish" : "dishes"} for “${esc(searchInput.value.trim())}”</p>`;
     let lastSec = null;
+    let open = false;
     matches.forEach((d) => {
       if (d.section !== lastSec) {
+        if (open) html += "</div>";
         lastSec = d.section;
-        html += `<h2 class="results-cat">${esc(d.section.name)}${d.section.kind === "seasonal" ? " · Seasonal" : ""}</h2>`;
+        html += `<h2 class="results-cat">${esc(d.section.name)}${d.section.kind === "seasonal" ? " · Seasonal" : ""}</h2><div class="grid">`;
+        open = true;
       }
       html += dishRowHTML(d);
     });
+    if (open) html += "</div>";
     results.innerHTML = html;
   }
   function clearSearch(focus) {
@@ -337,10 +343,16 @@
     if (!d) return;
     currentDishId = id;
     const body = $("#dish-body");
-    const hero = d.image
-      ? `<div class="dish-hero"><img src="${esc(d.image)}" alt="${esc(d.name)}" width="800" height="500" decoding="async"></div>`
+    const art = artFor(d);
+    const hero = art
+      ? `<div class="dish-hero pos-${d.pos}"><img class="art" src="${esc(art)}" alt="${d.image ? esc(d.name) : ""}" width="640" height="640" decoding="async"></div>`
       : `<div class="dish-hero"><div class="dish-ph" aria-hidden="true"><div class="dish-ph-arch"><svg class="lotus"><use href="#i-lotus"/></svg></div></div><span class="dish-ph-label" aria-hidden="true">${esc(d.section.short)}</span></div>`;
     let blocks = "";
+    if (d.about) {
+      blocks += `<div class="dish-block"><h3>About this dish</h3><p>${esc(d.about)}</p></div>`;
+    } else if (d.section.story) {
+      blocks += `<div class="dish-block"><h3>${esc(d.section.story.title)}</h3><p>${esc(d.section.story.text)}</p></div>`;
+    }
     if (d.includes && d.includes.length) {
       blocks += `<div class="dish-block"><h3>What’s included</h3><ul class="includes">${d.includes.map((x, i) => `<li><span class="num">${i + 1}</span><span>${esc(x)}</span></li>`).join("")}</ul></div>`;
     }
@@ -476,8 +488,8 @@
       else if (t.closest(".dec")) setQty(id, qtyOf(id) - 1);
       return;
     }
-    const main = t.closest(".dish-main");
-    if (main) { openRoute("#dish/" + main.closest(".dish").dataset.dish); return; }
+    const main = t.closest(".card-main");
+    if (main) { openRoute("#dish/" + main.closest("[data-dish]").dataset.dish); return; }
 
     const chip = t.closest(".chip");
     if (chip) { scrollToSection(chip.dataset.target); return; }

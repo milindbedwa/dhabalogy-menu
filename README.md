@@ -34,6 +34,8 @@ Fonts load from Google Fonts (Yatra One for painted-signboard headings, Mukta fo
 | `css/styles.css` | All styling, design tokens at the top of the file |
 | `js/app.js` | Behaviour: routing, search, scroll-spy, sheets, selection, persistence |
 | `js/menu-data.js` | **All menu content.** Edit this file to change dishes, prices, images and seasonal sections |
+| `js/menu-stories.js` | **Artwork, colour tones, section stories and "About this dish" notes.** One illustration per category, plus ~85 short food-culture notes |
+| `assets/illus/` | 14 painted folk-style category illustrations, generated to match the brand posters |
 | `assets/` | Logo (transparent PNG keyed from the posters), artwork crops, favicon |
 
 ## Updating the menu
@@ -68,9 +70,15 @@ Stable ids are generated from the section id and dish name. Customers' saved sel
 - The Hindi note on the Pizza/Pasta panel is shown in English: "Pizza and pasta made in pure desi ghee are available on special request."
 - The phone number on the dancers poster is not shown; the address line is.
 
+## Illustrations and photos
+
+Every dish shows artwork: its own `image` if it has one, otherwise the illustration of its category from `js/menu-stories.js`. Cards within a category show different crops of the same illustration so neighbouring cards do not look identical. To replace an illustration with a real photo, drop the file in `assets/` and set `image: "assets/your-photo.jpg"` on the dish in `menu-data.js`; the photo takes priority automatically, and dishes with their own image render as wide cards.
+
+The 14 category illustrations were generated with an image model guided by the Navratri posters (about 3.5 credits). Prompts are in the project history; regenerating in the same style only needs the two poster references.
+
 ## Imagery still needed
 
-Only the five Navratri dishes have artwork (cropped from the supplied posters). Everything else uses the branded placeholder (mustard arch + lotus) in the detail sheet and no thumbnail in the list. Good candidates for photography or matching illustrations, in priority order:
+Only the five Navratri dishes have dish-specific artwork; everything else shares its category illustration. Good candidates for photography, in priority order:
 
 1. Veg Thali (₹490) and the Ek Se Bhale Do mini meals
 2. Kullad Masala Chai / Kullad Coffee (brand-defining)
